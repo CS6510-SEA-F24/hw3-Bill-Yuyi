@@ -1,0 +1,127 @@
+name: Java CI/CD Pipeline
+
+# Trigger the workflow on pull requests and pushes to the main branch
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  # Job to build and run tests
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build and run tests
+        run: ./gradlew clean build
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: build/test-results/test/
+
+  # Job to run Checkstyle
+  checkstyle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run Checkstyle
+        run: ./gradlew checkstyleMain checkstyleTest
+
+      - name: Upload Checkstyle report
+        uses: actions/upload-artifact@v3
+        with:
+          name: checkstyle-report
+          path: build/reports/checkstyle/
+
+  # Job to run Javadoc
+  javadoc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Generate Javadoc
+        run: ./gradlew javadoc
+
+      - name: Upload Javadoc
+        uses: actions/upload-artifact@v3
+        with:
+          name: javadoc
+          path: build/docs/javadoc/
+
+  # Job to run static analysis (e.g., SpotBugs)
+  static-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run static analysis (e.g., SpotBugs)
+        run: ./gradlew spotbugsMain
+
+      - name: Upload static analysis report
+        uses: actions/upload-artifact@v3
+        with:
+          name: static-analysis-report
+          path: build/reports/spotbugs/
+
+  # Job to generate JAR
+  jar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Generate JAR
+        run: ./gradlew jar
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: jar
+          path: build/libs/
