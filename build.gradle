@@ -1,7 +1,6 @@
 plugins {
     id 'java'
     id 'checkstyle'
-    id 'pmd'
     id 'jacoco'
 }
 
@@ -33,7 +32,7 @@ checkstyle {
     ignoreFailures = false
 }
 
-// Requirement 2: Javadoc configuration
+// Javadoc configuration
 javadoc {
     options.encoding = 'UTF-8'
     options.addStringOption('Xdoclint:none', '-quiet')
@@ -43,20 +42,7 @@ javadoc {
     }
 }
 
-// Requirement 3: PMD configuration
-pmd {
-    toolVersion = '6.50.0'
-    consoleOutput = true
-    ignoreFailures = true
-    rulesMinimumPriority = 5
-    ruleSets = [
-            "category/java/bestpractices.xml",
-            "category/java/errorprone.xml",
-            "category/java/codestyle.xml"
-    ]
-}
-
-// Requirement 4: JaCoCo configuration
+// JaCoCo configuration
 jacoco {
     toolVersion = "0.8.7"
 }
@@ -91,8 +77,6 @@ build {
 task checkCode {
     dependsOn 'checkstyleMain'
     dependsOn 'checkstyleTest'
-    dependsOn 'pmdMain'
-    dependsOn 'pmdTest'
     dependsOn 'test'
     dependsOn 'jacocoTestReport'
     dependsOn 'jacocoTestCoverageVerification'

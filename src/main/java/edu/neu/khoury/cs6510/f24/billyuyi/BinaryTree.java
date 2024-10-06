@@ -5,7 +5,13 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.function.Consumer;
 
-class BinaryTree {
+/**
+ * A class representing a Binary Tree. This class provides functionality to
+ * validate whether the tree is a Binary Search Tree (BST), calculate the
+ * maximum depth of the tree, find the maximum value in the tree, and perform
+ * basic operations such as inserting nodes to the left or right.
+ */
+public class BinaryTree {
 
   private Node root;
 
@@ -140,10 +146,21 @@ class BinaryTree {
     tmp.setLeft(node);
   }
 
+  /**
+   * Retrieves the root node of the binary tree.
+   *
+   * @return Node - the root of the tree.
+   */
   public Node getRoot() {
     return root;
   }
 
+  /**
+   * Sets the root node of the binary tree.
+   *
+   * @param root - Node, the new root node of the tree.
+   * @throws IllegalArgumentException if the root is null.
+   */
   public void setRoot(final Node root) throws IllegalArgumentException {
     if (root == null) {
       throw new IllegalArgumentException("root cannot be null");
