@@ -1,11 +1,7 @@
 plugins {
-// Build Java: https://docs.gradle.org/current/userguide/building_java_projects.html
     id 'java'
-
-// https://docs.gradle.org/current/userguide/pmd_plugin.html#header
+    id 'checkstyle'
     id 'pmd'
-
-// https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
 }
 
@@ -19,39 +15,61 @@ repositories {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    checkstyle 'com.puppycrawl.tools:checkstyle:10.3'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+checkstyle {
+    toolVersion = '10.3'
+    configFile = file('config/checkstyle/google_checks.xml')
+    maxWarnings = 0
+    ignoreFailures = false
+}
+
+// Requirement 2: Javadoc configuration
+javadoc {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+    doLast {
+        String fixedBuildDir = buildDir.toString().replace('\\', '/')
+        println "Javadoc available at: file:///$fixedBuildDir/docs/javadoc/index.html"
+    }
+}
+
+// Requirement 3: PMD configuration
 pmd {
-    ignoreFailures=true
-    pmdTest.enabled=false
+    toolVersion = '6.50.0'
+    consoleOutput = true
+    ignoreFailures = true
+    rulesMinimumPriority = 5
     ruleSets = [
             "category/java/bestpractices.xml",
             "category/java/errorprone.xml",
             "category/java/codestyle.xml"
-            //"java-basic",
-            //"java-braces",
-            //"java-strings",
     ]
 }
 
-javadoc {
-    doLast {
-        String fixedBuildDir = buildDir.toString().replace('\\', '/')
-        println "file:///$fixedBuildDir/docs/javadoc/index.html"
-    }
-}
-
+// Requirement 4: JaCoCo configuration
 jacoco {
     toolVersion = "0.8.7"
 }
 
 jacocoTestReport {
     reports {
+        xml.required = true
+        html.required = true
         html.destination file("${buildDir}/jacocoHtml")
     }
     doLast {
         String fixedBuildDir = buildDir.toString().replace('\\', '/')
-        println "file:///$fixedBuildDir/jacocoHtml/index.html"
+        println "Coverage report available at: file:///$fixedBuildDir/jacocoHtml/index.html"
     }
 }
 
@@ -59,40 +77,26 @@ jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                // minimum percentage of code coverage
-                minimum = 0.2
-            }
-        }
-        rule {
-            enabled = false
-            element = 'CLASS'
-            includes = ['org.gradle.*']
-            limit {
-                counter = 'LINE'
-                value = 'TOTALCOUNT'
-                maximum = 0.3
+                minimum = 0.8
             }
         }
     }
 }
 
-// Fail the build if code coverage isn't high enough
-check.dependsOn jacocoTestCoverageVerification
+build {
+    dependsOn jacocoTestReport
+}
 
-// Run code coverage after tests run
-jacocoTestReport.mustRunAfter test
-
-
-task doAll {
-    // Runs a java build. Imported from the java plugin
-    dependsOn build
-    // Runs all the tests. Imported from the java plugin.
-    dependsOn test
-    // Runs pmd. Imported by pmd plugin
-    dependsOn check
-    // Runs java doc. Imported from the java plugin
-    dependsOn javadoc
-    println 'all done!'
+// Task to run all quality checks
+task checkCode {
+    dependsOn 'checkstyleMain'
+    dependsOn 'checkstyleTest'
+    dependsOn 'pmdMain'
+    dependsOn 'pmdTest'
+    dependsOn 'test'
+    dependsOn 'jacocoTestReport'
+    dependsOn 'jacocoTestCoverageVerification'
+    dependsOn 'javadoc'
 }
 
 test {

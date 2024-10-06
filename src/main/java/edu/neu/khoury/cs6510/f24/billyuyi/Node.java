@@ -1,11 +1,11 @@
-package edu.neu.khoury.cs6510.f24.bill_yuyi;
+package edu.neu.khoury.cs6510.f24.billyuyi;
 
 import java.util.Objects;
 
 public class Node {
-  public int val;
-  public Node left;
-  public Node right;
+  private int val;
+  private Node left;
+  private Node right;
 
   /**
    * Constructor for Node
@@ -14,7 +14,7 @@ public class Node {
    * @param left    - Node,given left Node
    * @param right     - Node, given left node
    */
-  public Node(int val, Node left, Node right) {
+  public Node(final int val, final Node left, final Node right) {
     this.val = val;
     this.left = left;
     this.right = right;
@@ -25,16 +25,40 @@ public class Node {
    *
    * @param val - Integer,given value
    */
-  public Node(int val) {
+  public Node(final int val) {
     this.val = val;
   }
 
+  public int getVal() {
+    return val;
+  }
+
+  public Node getLeft() {
+    return left;
+  }
+
+  public Node getRight() {
+    return right;
+  }
+
+  public void setVal(final int val) {
+    this.val = val;
+  }
+
+  public void setLeft(final Node left) {
+    this.left = left;
+  }
+
+  public void setRight(final Node right) {
+    this.right = right;
+  }
+
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(final Object obj) {
+    if (this == obj) {
       return true;
     }
-    if (!(o instanceof Node node)) {
+    if (!(obj instanceof Node node)) {
       return false;
     }
     return val == node.val && Objects.equals(left, node.left) && Objects.equals(
