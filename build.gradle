@@ -4,8 +4,8 @@ plugins {
     id 'jacoco'
 }
 
-group 'CS6510 - 24 fall'
-version '1.0'
+group = 'io.github.Bill-Yuyi'
+version = '0.1.0'
 
 repositories {
     mavenCentral()
@@ -32,7 +32,6 @@ checkstyle {
     ignoreFailures = false
 }
 
-// Javadoc configuration
 javadoc {
     options.encoding = 'UTF-8'
     options.addStringOption('Xdoclint:none', '-quiet')
@@ -42,7 +41,6 @@ javadoc {
     }
 }
 
-// JaCoCo configuration
 jacoco {
     toolVersion = "0.8.7"
 }
@@ -73,7 +71,6 @@ build {
     dependsOn jacocoTestReport
 }
 
-// Task to run all quality checks
 task checkCode {
     dependsOn 'checkstyleMain'
     dependsOn 'checkstyleTest'
