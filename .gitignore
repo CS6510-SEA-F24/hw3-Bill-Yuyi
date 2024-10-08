@@ -1,0 +1,10 @@
+.gradle
+build
+**/.DS_Store
+.idea
+io
+testfile.txt
+testfile.txt.gpg
+script.sh
+hw3-Bill-Yuyi-0.1.0-bundle.zip
+

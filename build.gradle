@@ -1,0 +1,185 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'jacoco'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = 'io.github.bill-yuyi'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    checkstyle 'com.puppycrawl.tools:checkstyle:10.3'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+checkstyle {
+    toolVersion = '10.3'
+    configFile = file('config/checkstyle/google_checks.xml')
+    maxWarnings = 0
+    ignoreFailures = false
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+    doLast {
+        println "Coverage report available at: file://${buildDir}/jacocoHtml/index.html"
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.8
+            }
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+task checkCode {
+    dependsOn 'checkstyleMain'
+    dependsOn 'checkstyleTest'
+    dependsOn 'test'
+    dependsOn 'jacocoTestReport'
+    dependsOn 'jacocoTestCoverageVerification'
+    dependsOn 'javadoc'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'hw3-Bill-Yuyi'
+                description = 'Homework 3 project for CS6510 SEA Fall 2024'
+                url = 'https://github.com/CS6510-SEA-F24/hw3-Bill-Yuyi'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'bill-yuyi'
+                        name = 'Bill Yuyi'
+                        email = 'wang.yuyi1@northeastern.edu'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/CS6510-SEA-F24/hw3-Bill-Yuyi.git'
+                    developerConnection = 'scm:git:ssh://github.com/CS6510-SEA-F24/hw3-Bill-Yuyi.git'
+                    url = 'https://github.com/CS6510-SEA-F24/hw3-Bill-Yuyi'
+                }
+            }
+        }
+    }
+}
+
+signing {
+    useGpgCmd()
+    sign publishing.publications.mavenJava
+}
+
+task generateChecksums {
+    doLast {
+        def m2Repo = file(System.getProperty("user.home") + "/.m2/repository/io/github/bill-yuyi/hw3-Bill-Yuyi/0.1.0")
+        def filesToChecksum = []
+
+        // Include the POM and module files if they exist in the local Maven repository
+        def pomFile = new File(m2Repo, "hw3-Bill-Yuyi-0.1.0.pom")
+        def moduleFile = new File(m2Repo, "hw3-Bill-Yuyi-0.1.0.module")
+        def jarFile = new File(m2Repo, "hw3-Bill-Yuyi-0.1.0.jar")
+        def sourceFile = new File(m2Repo, "hw3-Bill-Yuyi-0.1.0-sources.jar")
+        def javadocFile = new File(m2Repo, "hw3-Bill-Yuyi-0.1.0-javadoc.jar")
+
+        if (pomFile.exists()) {
+            filesToChecksum << pomFile
+        }
+        if (moduleFile.exists()) {
+            filesToChecksum << moduleFile
+        }
+        if (jarFile.exists()) {
+            filesToChecksum << jarFile
+        }
+
+        if (sourceFile.exists()) {
+            filesToChecksum << sourceFile
+        }
+        if (javadocFile.exists()) {
+            filesToChecksum << javadocFile
+        }
+
+        // Generate checksums (MD5, SHA-1) and GPG signatures (ASC)
+        filesToChecksum.each { file ->
+            ['MD5', 'SHA-1'].each { algorithm ->
+                def checksum = generateChecksum(file, algorithm)
+                def checksumFile = new File("${file.path}.${algorithm.toLowerCase().replace('-', '')}")
+                checksumFile.text = checksum
+                println "Generated ${algorithm} checksum for ${file.name}: ${checksum}"
+            }
+
+            // Generate .asc GPG signature
+            def ascFile = new File("${file.path}.asc")
+            def signCommand = ["gpg", "--batch", "--yes", "--armor", "--output", ascFile.absolutePath, "--detach-sign", file.absolutePath]
+            def process = signCommand.execute()
+            process.waitFor()
+            if (process.exitValue() == 0) {
+                println "Generated GPG signature for ${file.name}"
+            } else {
+                println "Error generating GPG signature for ${file.name}: ${process.err.text}"
+            }
+        }
+    }
+}
+
+def generateChecksum(File file, String algorithm) {
+    def digest = java.security.MessageDigest.getInstance(algorithm)
+    file.eachByte 4096, { bytes, size ->
+        digest.update(bytes, 0, size)
+    }
+    return digest.digest().encodeHex().toString()
+}
+
+// Hook the checksum and signing task into the local Maven publishing process
+tasks.withType(PublishToMavenLocal) {
+    finalizedBy generateChecksums
+}
+
