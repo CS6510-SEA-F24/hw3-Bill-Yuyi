@@ -9,6 +9,8 @@ A Java implementation of a Binary Tree data structure. This library provides fun
 - Find the maximum value in the tree.
 - Perform basic operations such as inserting nodes to the left or right.
 
+# Link to Maven central: 
+[Maven central page](https://central.sonatype.com/artifact/io.github.bill-yuyi/hw3-Bill-Yuyi)
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
